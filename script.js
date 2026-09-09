@@ -195,13 +195,3 @@ bookForm.addEventListener("submit", (event) => {
 // here because nothing has changed yet on load — there's nothing new to save.
 loadLibrary();
 render();
-
-// --- TEMP: seed some books for the screenshot. Delete after. ---
-if (myLibrary.length === 0) {
-  addBookToLibrary("Haruki Murakami", "Kafka on the Shore", 505, true);
-  addBookToLibrary("Ursula K. Le Guin", "A Wizard of Earthsea", 183, true);
-  addBookToLibrary("Andy Weir", "Project Hail Mary", 496, false);
-  addBookToLibrary("Toni Morrison", "Beloved", 324, false);
-  addBookToLibrary("Italo Calvino", "Invisible Cities", 165, true);
-  update();
-}
