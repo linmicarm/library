@@ -39,6 +39,46 @@ function render() {
   });
 }
 
+// Grab the dialog-related elements once, up front, so handlers can reuse them.
+const newBookBtn = document.querySelector("#new-book-btn");
+const bookDialog = document.querySelector("#book-dialog");
+const bookForm = document.querySelector("#book-form");
+const cancelBtn = document.querySelector("#cancel-btn");
+
+// Open the dialog when "New Book" is clicked.
+// showModal() (not show()) dims the background and traps focus for accessibility.
+newBookBtn.addEventListener("click", () => {
+  bookDialog.showModal();
+});
+
+// Close the dialog when "Cancel" is clicked, without adding a book.
+cancelBtn.addEventListener("click", () => {
+  bookDialog.close();
+});
+
+// Runs when the form is submitted (Add Book clicked, or Enter pressed).
+bookForm.addEventListener("submit", (event) => {
+  // Stop the browser's default submit-and-reload, which would wipe myLibrary.
+  event.preventDefault();
+
+  // Read the values the user typed. .value is always a STRING.
+  const title = document.querySelector("#title").value;
+  const author = document.querySelector("#author").value;
+  // Pages comes in as a string ("310"), so convert to a real number.
+  const pages = Number(document.querySelector("#pages").value);
+  // A checkbox has no meaningful .value — we read .checked, which is a boolean.
+  const isRead = document.querySelector("#isRead").checked;
+
+  // Update the data (source of truth)...
+  addBookToLibrary(author, title, pages, isRead);
+  // ...then update the view.
+  render();
+
+  // Clear the fields so the form is fresh next time, and close the dialog.
+  bookForm.reset();
+  bookDialog.close();
+});
+
 // --- Manual test data + initial render (temporary, for development) ---
 addBookToLibrary("Tolkien", "The Hobbit", 310, true);
 addBookToLibrary("Andy Weir", "Project Hail Mary", 496, false);

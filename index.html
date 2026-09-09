@@ -8,8 +8,40 @@
   </head>
 
   <body>
-    <div id="library">
-    </div>
+    <button id="new-book-btn">New Book</button>
+
+    <dialog id="book-dialog">
+      <form id="book-form" method="dialog">
+        <h2>Add a New Book</h2>
+
+        <label>
+          Title
+          <input type="text" id="title" name="title" required />
+        </label>
+
+        <label>
+          Author
+          <input type="text" id="author" name="author" required />
+        </label>
+
+        <label>
+          Pages
+          <input type="number" id="pages" name="pages" required />
+        </label>
+
+        <label>
+          Read?
+          <input type="checkbox" id="isRead" name="isRead" />
+        </label>
+
+        <div>
+          <button type="submit">Add Book</button>
+          <button type="button" id="cancel-btn">Cancel</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="library"></div>
     <script src="script.js"></script>
   </body>
 </html>
