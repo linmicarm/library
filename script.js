@@ -39,22 +39,60 @@ function render() {
 
   myLibrary.forEach((book) => {
     const card = document.createElement("div");
-    card.dataset.id = book.id; // links this card back to its book object in the array
+    card.className = "book-card";
+    card.dataset.id = book.id;
 
-    const info = document.createElement("p");
-    info.textContent = `${book.title} by ${book.author}, ${book.pages} pages — ${book.isRead ? "Read" : "Not read yet"}`;
+    // A colored spine accent down the left edge. We derive a hue from the
+    // book's id so each book gets its own consistent color, like real spines.
+    const spine = document.createElement("div");
+    spine.className = "book-spine";
+    // Turn the first chunk of the id into a number, then into a hue (0–359).
+    const hue = parseInt(book.id.slice(0, 8), 16) % 360;
+    spine.style.setProperty("--spine-hue", hue);
 
-    // Buttons are tagged with data-action instead of getting their own listeners.
-    // The single delegated listener below reads this to know what was clicked.
+    // Title — the prominent line.
+    const title = document.createElement("h3");
+    title.className = "book-title";
+    title.textContent = book.title;
+
+    // Author — quieter, secondary.
+    const author = document.createElement("p");
+    author.className = "book-author";
+    author.textContent = book.author;
+
+    // Meta row: page count + the read-status pill.
+    const meta = document.createElement("div");
+    meta.className = "book-meta";
+
+    const pages = document.createElement("span");
+    pages.className = "book-pages";
+    pages.textContent = `${book.pages} pages`;
+
+    const status = document.createElement("span");
+    // Two classes: a base "pill" plus a state class we style differently.
+    status.className = `status-pill ${book.isRead ? "is-read" : "is-unread"}`;
+    status.textContent = book.isRead ? "Read" : "Unread";
+
+    meta.append(pages, status);
+
+    // Action buttons.
+    const actions = document.createElement("div");
+    actions.className = "book-actions";
+
+    const toggleBtn = document.createElement("button");
+    toggleBtn.className = "btn-toggle";
+    toggleBtn.textContent = "Toggle read";
+    toggleBtn.dataset.action = "toggle";
+
     const deleteBtn = document.createElement("button");
+    deleteBtn.className = "btn-delete";
     deleteBtn.textContent = "Delete";
     deleteBtn.dataset.action = "delete";
 
-    const toggleBtn = document.createElement("button");
-    toggleBtn.textContent = "Toggle Read";
-    toggleBtn.dataset.action = "toggle";
+    actions.append(toggleBtn, deleteBtn);
 
-    card.append(info, deleteBtn, toggleBtn);
+    // Assemble the card in order.
+    card.append(spine, title, author, meta, actions);
     libraryContainer.append(card);
   });
 }

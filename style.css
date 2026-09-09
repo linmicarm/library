@@ -1,20 +1,250 @@
-/* The ::backdrop is the dimmed overlay behind an open <dialog>.
-   It only exists when the dialog is opened via showModal(). */
-dialog::backdrop {
-  background: rgba(0, 0, 0, 0.4);
+/* ---------- Design tokens ---------- */
+/* Defining colors/values once as variables means you change them in ONE place
+   and the whole app updates. Same "single source of truth" idea as your array. */
+:root {
+  --paper: #faf8f3;        /* page background — warm off-white */
+  --card: #ffffff;         /* card surface */
+  --ink: #2a2a28;          /* primary text */
+  --ink-soft: #6b6a63;     /* secondary/muted text */
+  --terracotta: #c15f3c;   /* accent */
+  --terracotta-dark: #7a3115;
+  --terracotta-tint: #f6e3da;
+  --line: #ece8e0;         /* hairline borders */
+  --radius: 14px;
 }
 
-/* Stack the form fields vertically with a little breathing room. */
+/* ---------- Base ---------- */
+* {
+  box-sizing: border-box; /* padding/borders count INSIDE an element's width */
+}
+
+body {
+  margin: 0;
+  padding: 2.5rem 1.5rem;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Zen Maru Gothic", system-ui, sans-serif;
+  line-height: 1.6;
+  max-width: 1100px;
+  margin-inline: auto; /* centers the page horizontally */
+}
+
+/* ---------- Header / New Book button ---------- */
+#new-book-btn {
+  display: block;
+  margin: 0 0 2rem;
+  padding: 0.7rem 1.4rem;
+  background: var(--terracotta);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+#new-book-btn:hover { background: var(--terracotta-dark); }
+#new-book-btn:active { transform: scale(0.98); } /* tiny press feedback */
+
+/* ---------- The shelf: a responsive grid ---------- */
+#library {
+  display: grid;
+  /* auto-fill = fit as many columns as will hold at min 240px each,
+     then stretch them to share the row (1fr). Fully responsive, no media
+     queries: wide screen = more columns, narrow = fewer. */
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+/* Empty-state message when the shelf has no books.
+   :empty matches an element with zero children. ::before injects text. */
+#library:empty::before {
+  content: "your shelf is empty — add your first book ♡";
+  color: var(--ink-soft);
+  font-style: italic;
+  grid-column: 1 / -1; /* span all columns */
+  text-align: center;
+  padding: 3rem 0;
+}
+
+/* ---------- Book card ---------- */
+.book-card {
+  position: relative;      /* so the absolutely-positioned spine anchors here */
+  overflow: hidden;        /* clip the spine to the card's rounded corners */
+  background: var(--card);
+  border: 0.5px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.25rem 1.25rem 1.6rem; /* extra left pad for the spine */
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+/* Lift the card slightly on hover — makes it feel tactile, "on" the shelf. */
+.book-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(122, 49, 21, 0.1);
+}
+
+/* The colored spine down the left edge. Its hue comes from the --spine-hue
+   variable JS set per-book, fed into hsl(). Each book = its own stable color. */
+.book-spine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: hsl(var(--spine-hue, 20), 45%, 55%);
+}
+
+.book-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.book-author {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+/* Meta row: pages on the left, status pill pushed to the right. */
+.book-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* pushes the two children to opposite ends */
+  margin-top: 0.3rem;
+}
+.book-pages {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+/* ---------- Status pill ---------- */
+.status-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px; /* huge radius = fully rounded pill */
+}
+.status-pill.is-read {
+  background: var(--terracotta-tint);
+  color: var(--terracotta-dark);
+}
+.status-pill.is-unread {
+  background: #eeece6;
+  color: var(--ink-soft);
+}
+
+/* ---------- Card action buttons ---------- */
+.book-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+.book-actions button {
+  flex: 1; /* both buttons share the width equally */
+  padding: 0.45rem;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.btn-toggle {
+  background: transparent;
+  border: 0.5px solid var(--terracotta);
+  color: var(--terracotta-dark);
+}
+.btn-toggle:hover { background: var(--terracotta-tint); }
+
+.btn-delete {
+  background: transparent;
+  border: 0.5px solid var(--line);
+  color: var(--ink-soft);
+}
+.btn-delete:hover { background: #f4f2ec; }
+
+/* ---------- Dialog ---------- */
+dialog {
+  border: none;
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  max-width: 380px;
+  width: 90%;
+  background: var(--card);
+  color: var(--ink);
+  /* Entry animation — see @keyframes below. */
+  animation: dialog-in 0.2s ease;
+}
+dialog::backdrop {
+  background: rgba(122, 49, 21, 0.25); /* warm-tinted dim, not plain black */
+}
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 #book-form {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  min-width: 300px;
+  gap: 0.9rem;
+}
+#book-form h2 {
+  margin: 0 0 0.3rem;
+  font-size: 1.3rem;
+  color: var(--terracotta-dark);
+}
+#book-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+#book-form input[type="text"],
+#book-form input[type="number"] {
+  padding: 0.5rem 0.7rem;
+  border: 0.5px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+  color: var(--ink);
+}
+#book-form input:focus {
+  outline: none;
+  border-color: var(--terracotta);
+  box-shadow: 0 0 0 3px var(--terracotta-tint); /* soft focus ring */
+}
+/* The "Read?" checkbox row should sit horizontally, not stacked. */
+#book-form label:has(input[type="checkbox"]) {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-/* Give each book card a simple border so they're visually separated. */
-#library > div {
-  border: 1px solid #ccc;
-  padding: 0.5rem;
-  margin: 0.5rem 0;
+/* Dialog action buttons */
+#book-form div {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+#book-form button {
+  flex: 1;
+  padding: 0.6rem;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+#book-form button[type="submit"] {
+  background: var(--terracotta);
+  color: #fff;
+  border: none;
+}
+#book-form button[type="submit"]:hover { background: var(--terracotta-dark); }
+#cancel-btn {
+  background: transparent;
+  border: 0.5px solid var(--line);
+  color: var(--ink-soft);
 }
