@@ -14,6 +14,12 @@ function Book(author, title, pages, isRead = false) {
   this.isRead = isRead; // boolean; defaults to false (a new book is unread)
 }
 
+// A method shared by ALL Book instances via the prototype.
+// `this` refers to whichever book the method is called on.
+Book.prototype.toggleRead = function () {
+  this.isRead = !this.isRead; // flip the boolean: true→false, false→true
+};
+
 // Separate from the constructor on purpose: the constructor only *builds* a book,
 // this function builds one AND stores it. Keeps responsibilities separated.
 function addBookToLibrary(author, title, pages, isRead) {
@@ -33,8 +39,36 @@ function render() {
 
   myLibrary.forEach((book) => {
     const card = document.createElement("div");
-    // Ternary turns the boolean into human-readable text inside the template literal.
-    card.textContent = `${book.title} by ${book.author}, ${book.pages} pages — ${book.isRead ? "Read" : "Not read yet"}`;
+
+    // Stamp the card with this book's unique id, stored in a data-attribute.
+    // This is the link between the DOM element and the object in the array.
+    card.dataset.id = book.id;
+
+    // A separate element for the text, so the buttons sit apart from it.
+    const info = document.createElement("p");
+    info.textContent = `${book.title} by ${book.author}, ${book.pages} pages — ${book.isRead ? "Read" : "Not read yet"}`;
+
+    // --- Delete button ---
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Delete";
+    deleteBtn.addEventListener("click", () => {
+      // Find where this book sits in the array by its id...
+      const index = myLibrary.findIndex((b) => b.id === book.id);
+      // ...remove 1 element at that position...
+      myLibrary.splice(index, 1);
+      // ...then re-render so the screen matches the updated array.
+      render();
+    });
+
+    // --- Toggle Read button ---
+    const toggleBtn = document.createElement("button");
+    toggleBtn.textContent = "Toggle Read";
+    toggleBtn.addEventListener("click", () => {
+      book.toggleRead(); // flip this book's isRead via the prototype method
+      render();          // rebuild the view so the change shows
+    });
+
+    card.append(info, deleteBtn, toggleBtn);
     libraryContainer.append(card);
   });
 }
@@ -79,8 +113,5 @@ bookForm.addEventListener("submit", (event) => {
   bookDialog.close();
 });
 
-// --- Manual test data + initial render (temporary, for development) ---
-addBookToLibrary("Tolkien", "The Hobbit", 310, true);
-addBookToLibrary("Andy Weir", "Project Hail Mary", 496, false);
-
+// Initial render (empty library on load, until the user adds books).
 render();
