@@ -4,7 +4,7 @@ A small library app for tracking books you've read and want to read. Add books t
 
 **[🔗 Live demo](https://linmicarm.github.io/library/)**
 
-![Screenshot of the library app]([alt text](image.png))
+![Screenshot of the Library app showing a shelf of books](screenshot.png)
 
 ## Features
 
@@ -34,7 +34,7 @@ This started as a [The Odin Project](https://www.theodinproject.com/) assignment
 
 Clone the repo and open `index.html` in your browser — no build step, no dependencies.
 
-\`\`\`bash
+​```bash
 git clone https://github.com/linmicarm/library.git
 cd library
-\`\`\`
+​```
