@@ -4,7 +4,7 @@ A small library app for tracking books you've read and want to read. Add books t
 
 **[🔗 Live demo](https://linmicarm.github.io/library/)**
 
-![Screenshot of the library app](![alt text](image.png))
+![Screenshot of the library app]([alt text](image.png))
 
 ## Features
 
