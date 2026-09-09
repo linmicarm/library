@@ -14,7 +14,8 @@ function Book(author, title, pages, isRead = false) {
   this.isRead = isRead; // boolean; defaults to false (a new book is unread)
 }
 
-// A method shared by ALL Book instances via the prototype.
+// A method shared by ALL Book instances via the prototype (stored once, not
+// copied onto every book). This is what ES6 `class` methods compile down to.
 // `this` refers to whichever book the method is called on.
 Book.prototype.toggleRead = function () {
   this.isRead = !this.isRead; // flip the boolean: true→false, false→true
@@ -33,45 +34,59 @@ const libraryContainer = document.querySelector("#library");
 // Wipes the screen and rebuilds every card from the array.
 // "UI is a function of state": call this after ANY change to myLibrary.
 function render() {
-  // Clear first, then rebuild — otherwise re-rendering would stack duplicate
-  // cards on top of the old ones.
+  // Clear first, then rebuild — otherwise re-rendering stacks duplicate cards.
   libraryContainer.textContent = "";
 
   myLibrary.forEach((book) => {
     const card = document.createElement("div");
+    card.dataset.id = book.id; // links this card back to its book object in the array
 
-    // Stamp the card with this book's unique id, stored in a data-attribute.
-    // This is the link between the DOM element and the object in the array.
-    card.dataset.id = book.id;
-
-    // A separate element for the text, so the buttons sit apart from it.
     const info = document.createElement("p");
     info.textContent = `${book.title} by ${book.author}, ${book.pages} pages — ${book.isRead ? "Read" : "Not read yet"}`;
 
-    // --- Delete button ---
+    // Buttons are tagged with data-action instead of getting their own listeners.
+    // The single delegated listener below reads this to know what was clicked.
     const deleteBtn = document.createElement("button");
     deleteBtn.textContent = "Delete";
-    deleteBtn.addEventListener("click", () => {
-      // Find where this book sits in the array by its id...
-      const index = myLibrary.findIndex((b) => b.id === book.id);
-      // ...remove 1 element at that position...
-      myLibrary.splice(index, 1);
-      // ...then re-render so the screen matches the updated array.
-      render();
-    });
+    deleteBtn.dataset.action = "delete";
 
-    // --- Toggle Read button ---
     const toggleBtn = document.createElement("button");
     toggleBtn.textContent = "Toggle Read";
-    toggleBtn.addEventListener("click", () => {
-      book.toggleRead(); // flip this book's isRead via the prototype method
-      render();          // rebuild the view so the change shows
-    });
+    toggleBtn.dataset.action = "toggle";
 
     card.append(info, deleteBtn, toggleBtn);
     libraryContainer.append(card);
   });
 }
+
+// EVENT DELEGATION: one listener on the container handles every book button.
+// Clicks bubble up from a button to this container, so we attach here once and
+// inspect each click — instead of adding a listener to every button on every
+// render. Bonus: this works even though the buttons don't exist yet when this
+// listener is attached, because the listener lives on the container, not the buttons.
+libraryContainer.addEventListener("click", (event) => {
+  // event.target = the exact element clicked (e.g. a specific button).
+  // Read its data-action; if there isn't one, the click was on empty space or
+  // the text — a guard clause bails early so we don't error below.
+  const action = event.target.dataset.action;
+  if (!action) return;
+
+  // Climb from the clicked button up to its card, then read the book's id.
+  // .closest() walks up the ancestors to the nearest element matching [data-id].
+  const card = event.target.closest("[data-id]");
+  const id = card.dataset.id;
+  const book = myLibrary.find((b) => b.id === id);
+
+  if (action === "delete") {
+    // Locate the book's position, then remove 1 item there (mutates in place).
+    const index = myLibrary.findIndex((b) => b.id === id);
+    myLibrary.splice(index, 1);
+  } else if (action === "toggle") {
+    book.toggleRead(); // prototype method flips isRead on this specific book
+  }
+
+  render(); // change the data first, then re-render once so the view matches
+});
 
 // Grab the dialog-related elements once, up front, so handlers can reuse them.
 const newBookBtn = document.querySelector("#new-book-btn");
@@ -91,6 +106,8 @@ cancelBtn.addEventListener("click", () => {
 });
 
 // Runs when the form is submitted (Add Book clicked, or Enter pressed).
+// Listening for "submit" on the FORM (not click on the button) also catches
+// the user pressing Enter inside a field.
 bookForm.addEventListener("submit", (event) => {
   // Stop the browser's default submit-and-reload, which would wipe myLibrary.
   event.preventDefault();
@@ -113,5 +130,6 @@ bookForm.addEventListener("submit", (event) => {
   bookDialog.close();
 });
 
-// Initial render (empty library on load, until the user adds books).
+// Initial render — runs on an empty library, so it just clears the container.
+// Safe to call before any books exist.
 render();
